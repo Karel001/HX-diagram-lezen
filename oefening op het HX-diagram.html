@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>hx-Werkblad — oefen het aflezen van het Mollier h,x-diagram</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0e1c2b;
+    --panel:#15263a;
+    --panel-2:#1b3149;
+    --grid-minor: rgba(146,186,217,0.08);
+    --grid-major: rgba(146,186,217,0.24);
+    --ink:#e9f1f8;
+    --ink-dim:#93aac1;
+    --ink-faint:#5f7488;
+    --border: rgba(146,186,217,0.28);
+    --accent-rh:#6fb6e0;
+    --accent-sat:#f2c14e;
+    --accent-h:#d98a5e;
+    --accent-t:#8fd9c4;
+    --accent-comfort:#8fb8f2;
+    --given-bg: rgba(146,186,217,0.14);
+    --given-ink:#cfe3f3;
+    --ok:#6fcf97;
+    --ok-bg: rgba(111,207,151,0.14);
+    --bad:#f2757d;
+    --bad-bg: rgba(242,117,125,0.14);
+  }
+
+  *{ box-sizing: border-box; }
+
+  body{
+    margin:0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Space Grotesk', sans-serif;
+    line-height:1.45;
+  }
+
+  .wrap{
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 28px 20px 60px;
+  }
+
+  header{
+    border-bottom: 1px solid var(--border);
+    padding-bottom:18px;
+    margin-bottom:20px;
+  }
+  header h1{ font-size: 1.7rem; font-weight:700; margin:0; letter-spacing:-0.01em; }
+  header p{ margin:6px 0 0; color: var(--ink-dim); font-size:0.95rem; max-width: 68ch; }
+
+  .controls{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:10px;
+    background: var(--panel);
+    border:1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-bottom: 18px;
+  }
+  .controls label{ font-size:0.85rem; color: var(--ink-dim); }
+  .controls select{
+    background: var(--panel-2);
+    border:1px solid var(--border);
+    color: var(--ink);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.85rem;
+    padding:6px 8px;
+    border-radius:5px;
+  }
+  .controls .spacer{ flex:1; }
+  button.primary, button.secondary{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:600;
+    font-size:0.87rem;
+    padding:9px 15px;
+    border-radius:6px;
+    cursor:pointer;
+    border:1px solid transparent;
+  }
+  button.primary{ background: var(--accent-rh); color:#0e1c2b; }
+  button.primary:hover{ filter:brightness(1.08); }
+  button.secondary{ background:transparent; color: var(--ink-dim); border-color: var(--border); }
+  button.secondary:hover{ color: var(--ink); border-color: var(--ink-dim); }
+
+  .layout{
+    display:grid;
+    grid-template-columns: 1fr 360px;
+    gap: 20px;
+    align-items:start;
+  }
+  @media (max-width: 900px){
+    .layout{ grid-template-columns: 1fr; }
+  }
+
+  .panel{
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 18px;
+  }
+
+  .instructions{
+    font-size:0.88rem;
+    color: var(--ink-dim);
+    margin: 0 0 14px;
+  }
+
+  table.worksheet{
+    width:100%;
+    border-collapse: collapse;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.92rem;
+  }
+  table.worksheet th{
+    text-align:center;
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:600;
+    font-size:0.8rem;
+    color: var(--ink-dim);
+    padding:8px 6px;
+    border-bottom: 1px solid var(--border);
+  }
+  table.worksheet td{
+    text-align:center;
+    padding:7px 6px;
+    border-bottom: 1px solid var(--grid-minor);
+  }
+  table.worksheet td.rownum{
+    color: var(--ink-faint);
+    font-size:0.8rem;
+    width: 28px;
+  }
+  table.worksheet td.given{
+    background: var(--given-bg);
+    color: var(--given-ink);
+    font-weight:600;
+    border-radius:4px;
+  }
+  table.worksheet td.blank{ position:relative; }
+  input.ans{
+    width: 78px;
+    background: transparent;
+    border:none;
+    border-bottom: 1.5px dashed var(--ink-faint);
+    color: var(--ink);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.92rem;
+    text-align:center;
+    padding:4px 2px;
+  }
+  input.ans:focus{ outline:none; border-bottom-color: var(--accent-rh); }
+  input.ans.input-ok{ border-bottom: 1.5px solid var(--ok); color: var(--ok); }
+  input.ans.input-bad{ border-bottom: 1.5px solid var(--bad); color: var(--bad); }
+  .answer-reveal{
+    display:block;
+    font-size:0.76rem;
+    color: var(--ok);
+    margin-top:2px;
+    min-height: 1em;
+  }
+
+  #summary{
+    margin-top:14px;
+    font-size:0.85rem;
+    color: var(--ink-dim);
+  }
+
+  #chart-panel svg{ width:100%; height:auto; display:block; }
+  .chart-caption{
+    font-size:0.78rem;
+    color: var(--ink-faint);
+    margin-top:10px;
+  }
+  .legend{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    padding: 10px 2px 2px;
+    font-size: 0.78rem;
+    color: var(--ink-dim);
+  }
+  .legend span{ display:inline-flex; align-items:center; gap:6px; }
+  .legend i{ width:16px; height:0; border-top: 2px solid; display:inline-block; }
+  .legend i.sat{ border-color: var(--accent-sat); border-top-width:3px; }
+  .legend i.rh{ border-color: var(--accent-rh); }
+  .legend i.h{ border-color: var(--accent-h); border-top-style: dashed; }
+  .legend i.t{ border-color: var(--accent-t); }
+
+  .grid-minor{ stroke: var(--grid-minor); stroke-width:1; }
+  .grid-major{ stroke: var(--grid-major); stroke-width:1; }
+  .plot-border{ fill:none; stroke: var(--border); stroke-width:1.5; }
+  .tick-label{ font-family:'IBM Plex Mono', monospace; font-size:11px; fill: var(--ink-dim); }
+  .axis-title{ font-family:'Space Grotesk', sans-serif; font-size:12px; fill: var(--ink-dim); }
+  .rh-curve{ fill:none; stroke: var(--accent-rh); stroke-width:1.2; opacity:0.8; }
+  .saturation-curve{ fill:none; stroke: var(--accent-sat); stroke-width:2.2; }
+  .rh-label{ font-family:'IBM Plex Mono', monospace; font-size:9.5px; fill: var(--accent-rh); }
+  .sat-label{ fill: var(--accent-sat); font-size:10px; }
+  .enthalpy-line{ fill:none; stroke: var(--accent-h); stroke-width:1; stroke-dasharray: 4 3; opacity:0.6; }
+  .h-label{ font-family:'IBM Plex Mono', monospace; font-size:8.5px; fill: var(--accent-h); opacity:0.85; }
+  .isotherm-line{ fill:none; stroke: var(--accent-t); stroke-width:1; opacity:0.45; }
+  .t-label{ font-family:'IBM Plex Mono', monospace; font-size:9px; fill: var(--accent-t); }
+  .comfort-zone{ fill: var(--accent-comfort); fill-opacity:0.14; stroke: var(--accent-comfort); stroke-width:1; stroke-dasharray:3 2; }
+  .comfort-label{ font-family:'IBM Plex Mono', monospace; font-size:8.5px; fill: var(--accent-comfort); }
+
+  footer{
+    margin-top:24px;
+    padding-top:16px;
+    border-top:1px solid var(--border);
+    font-size:0.8rem;
+    color: var(--ink-faint);
+  }
+  footer code{ font-family:'IBM Plex Mono', monospace; color: var(--ink-dim); }
+
+  @media print{
+    body{ background:#fff; color:#000; }
+    .no-print{ display:none !important; }
+    .layout{ grid-template-columns: 1fr; }
+    #chart-panel{ display:none; }
+    .panel{ border-color:#000; background:#fff; padding:0; }
+    header{ border-bottom-color:#000; }
+    header p{ color:#333; }
+    .instructions{ color:#333; }
+    table.worksheet th{ color:#000; border-bottom-color:#000; }
+    table.worksheet td{ border-bottom-color:#ccc; }
+    table.worksheet td.given{ background:#eee; color:#000; }
+    input.ans{ border-bottom-color:#000; color:#000; }
+    .answer-reveal{ color:#000; }
+    footer{ color:#555; border-top-color:#000; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>hx-Werkblad</h1>
+    <p>Deze tabel toont gedeeltelijk ingevulde meetwaarden. Zoek de ontbrekende waarden op met het Mollier h,x-diagram
+      van Systemair en vul ze hieronder in (digitaal) of op de afgedrukte versie (op papier).</p>
+  </header>
+
+  <div class="controls no-print">
+    <label for="num-rows">Aantal opdrachten:</label>
+    <select id="num-rows">
+      <option value="6">6</option>
+      <option value="8" selected>8</option>
+      <option value="10">10</option>
+      <option value="12">12</option>
+    </select>
+    <button class="primary" onclick="newSet()">Nieuwe set</button>
+    <div class="spacer"></div>
+    <button class="secondary" onclick="checkAnswers()">Controleer mijn antwoorden</button>
+    <button class="secondary" id="btn-answers" onclick="toggleAnswers()">Toon oplossingen</button>
+    <button class="secondary" onclick="window.print()">Afdrukken</button>
+  </div>
+
+  <div class="layout">
+
+    <div class="panel" id="table-panel">
+      <p class="instructions">Elke rij toont twee bekende waarden (gemarkeerd) — zoek de twee ontbrekende waarden op in het Mollier h,x-diagram van Systemair en vul ze in.</p>
+      <div id="table-wrap"></div>
+      <div id="summary"></div>
+    </div>
+
+    <div class="panel" id="chart-panel">
+      <svg id="chart" viewBox="0 0 900 570" xmlns="http://www.w3.org/2000/svg">
+        <g id="grid"></g>
+        <g id="curves"></g>
+        <g id="axes"></g>
+      </svg>
+      <div class="legend">
+        <span><i class="t"></i> isothermen (om de 5 °C)</span>
+        <span><i class="rh"></i> lijnen gelijke RH (10–90%)</span>
+        <span><i class="sat"></i> verzadigingslijn (100%)</span>
+        <span><i class="h"></i> lijnen gelijke enthalpie h [kJ/kg]</span>
+      </div>
+      <p class="chart-caption">Ter referentie/decoratie — gebruik voor deze opdracht het Mollier h,x-diagram van Systemair.</p>
+    </div>
+
+  </div>
+
+  <footer>
+    Dit is een schuin Mollier h,x-diagram: x (vochtgehalte) staat horizontaal, de enthalpie-as is afgeschoven zodat de
+    0 °C-isotherm horizontaal ligt. Aannames: druk p = 101 325 Pa (zeeniveau), verzadigingsdruk volgens de
+    Magnus-benadering, enthalpie volgens de gangbare relatie voor vochtige lucht. Toleranties bij het controleren:
+    T ±1,5 °C, RH ±5%, x ±1,0 g/kg, h ±3 kJ/kg. Formules herbouwd in JavaScript, oorspronkelijk geïnspireerd op de
+    rekenlogica van de open-source bibliotheek <code>psychrochart</code> (github.com/azogue/psychrochart).
+  </footer>
+
+</div>
+
+<script>
+/* ---------- psychrometrie ---------- */
+const P_ATM = 101325; // Pa, zeeniveau
+
+function pSat(T){ return 610.94 * Math.exp(17.625 * T / (T + 243.04)); }
+function xFromT_RH(T, RH){
+  const pv = (RH/100) * pSat(T);
+  const w = 0.622 * pv / (P_ATM - pv);
+  return w * 1000;
+}
+function RHFromT_x(T, x_gkg){
+  const w = x_gkg/1000;
+  const pv = w * P_ATM / (0.622 + w);
+  return Math.max(0, pv / pSat(T) * 100);
+}
+function enthalpy(T, x_gkg){
+  const w = x_gkg/1000;
+  return 1.006*T + w*(2501 + 1.86*T);
+}
+function parseNum(str){
+  const v = parseFloat(String(str).trim().replace(',', '.'));
+  return Number.isFinite(v) ? v : NaN;
+}
+function fmt(n, d=1){ return n.toFixed(d).replace('.', ','); }
+
+/* ---------- diagramgeometrie (decoratief, niet interactief) ---------- */
+const SHEAR_C = 2.501;
+const T_MIN=-10, T_MAX=45, X_MIN=0, X_MAX=30;
+const plotLeft=60, plotTop=34, plotW=700, plotH=500;
+
+function Yof(T, xg){ return T * (1.006 + 0.00186*xg); }
+const Y_MIN = Math.min(Yof(T_MIN,X_MIN), Yof(T_MIN,X_MAX), Yof(T_MAX,X_MIN), Yof(T_MAX,X_MAX));
+const Y_MAX = Math.max(Yof(T_MIN,X_MIN), Yof(T_MIN,X_MAX), Yof(T_MAX,X_MIN), Yof(T_MAX,X_MAX));
+function pxFromXg(xg){ return plotLeft + (xg-X_MIN)/(X_MAX-X_MIN)*plotW; }
+function pyFromY(Y){ return plotTop + plotH - (Y-Y_MIN)/(Y_MAX-Y_MIN)*plotH; }
+function TXtoPixel(T, xg){ return [pxFromXg(xg), pyFromY(Yof(T,xg))]; }
+
+function buildPath(xgToY, step=0.5){
+  const pts=[];
+  for(let xg=X_MIN; xg<=X_MAX+1e-9; xg+=step){
+    const Y=xgToY(xg);
+    if(Y>=Y_MIN-1 && Y<=Y_MAX+1) pts.push([xg,Y]);
+  }
+  return pts;
+}
+function pathD(pts){
+  return pts.map((p,i)=>`${i===0?'M':'L'}${pxFromXg(p[0]).toFixed(1)},${pyFromY(p[1]).toFixed(1)}`).join(' ');
+}
+
+function renderGrid(){
+  let s='';
+  for(let w=X_MIN; w<=X_MAX; w++){
+    const px=pxFromXg(w);
+    s+=`<line x1="${px}" y1="${plotTop}" x2="${px}" y2="${plotTop+plotH}" class="${w%5===0?'grid-major':'grid-minor'}"/>`;
+  }
+  document.getElementById('grid').innerHTML = s;
+}
+function renderAxes(){
+  let s='';
+  s+=`<rect x="${plotLeft}" y="${plotTop}" width="${plotW}" height="${plotH}" class="plot-border"/>`;
+  for(let w=X_MIN; w<=X_MAX; w+=5){
+    s+=`<text x="${pxFromXg(w)}" y="${plotTop-10}" class="tick-label" text-anchor="middle">${w}</text>`;
+  }
+  s+=`<text x="${plotLeft+plotW/2}" y="${plotTop-24}" class="axis-title" text-anchor="middle">x [g/kg droge lucht]</text>`;
+  for(let t=T_MIN; t<=T_MAX; t+=10){
+    const [,py]=TXtoPixel(t,0);
+    if(py>=plotTop-2 && py<=plotTop+plotH+2){
+      s+=`<text x="${plotLeft-8}" y="${py+4}" class="tick-label" text-anchor="end">${t}</text>`;
+    }
+  }
+  s+=`<text x="16" y="${plotTop+plotH/2}" class="axis-title" text-anchor="middle" transform="rotate(-90 16 ${plotTop+plotH/2})">T [\u00B0C]</text>`;
+  document.getElementById('axes').innerHTML = s;
+}
+function renderCurves(){
+  let s='';
+  {
+    const corners=[[4,20],[12,20],[12,26],[4,26]].map(([xg,T])=>TXtoPixel(T,xg));
+    const d='M'+corners.map(p=>`${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' L')+' Z';
+    s+=`<path d="${d}" class="comfort-zone"/>`;
+  }
+  for(let t=T_MIN; t<=T_MAX; t+=5){
+    const pts=buildPath(xg=>Yof(t,xg));
+    if(pts.length<2) continue;
+    s+=`<path d="${pathD(pts)}" class="isotherm-line"/>`;
+    const p0=TXtoPixel(t,pts[0][0]);
+    s+=`<text x="${p0[0]-3}" y="${p0[1]-2}" class="t-label" text-anchor="end">${t}</text>`;
+  }
+  const rhs=[10,20,30,40,50,60,70,80,90];
+  for(const rh of rhs){
+    const raw=[];
+    for(let t=T_MIN; t<=T_MAX; t+=0.5){
+      const xg=xFromT_RH(t,rh);
+      if(xg>=X_MIN-1 && xg<=X_MAX+1) raw.push([xg, Yof(t,xg)]);
+    }
+    if(raw.length<2) continue;
+    s+=`<path d="${pathD(raw)}" class="rh-curve"/>`;
+    const last=raw[raw.length-1];
+    s+=`<text x="${pxFromXg(last[0])+3}" y="${pyFromY(last[1])+3}" class="rh-label">${rh}</text>`;
+  }
+  {
+    const raw=[];
+    for(let t=T_MIN; t<=T_MAX; t+=0.5){
+      const xg=xFromT_RH(t,100);
+      if(xg>=X_MIN-1 && xg<=X_MAX+1) raw.push([xg, Yof(t,xg)]);
+    }
+    s+=`<path d="${pathD(raw)}" class="saturation-curve"/>`;
+    const last=raw[raw.length-1];
+    s+=`<text x="${pxFromXg(last[0])-3}" y="${pyFromY(last[1])-5}" class="rh-label sat-label" text-anchor="end">100</text>`;
+  }
+  const hs=[-20,-10,0,10,20,30,40,50,60,70,80,90,100,110,120];
+  for(const h of hs){
+    const pts=buildPath(xg=>h - SHEAR_C*xg);
+    if(pts.length<2) continue;
+    s+=`<path d="${pathD(pts)}" class="enthalpy-line"/>`;
+    const last=pts[pts.length-1];
+    s+=`<text x="${pxFromXg(last[0])}" y="${pyFromY(last[1])-4}" class="h-label" text-anchor="middle">${h}</text>`;
+  }
+  document.getElementById('curves').innerHTML = s;
+}
+renderGrid(); renderAxes(); renderCurves();
+
+/* ---------- werkblad ---------- */
+const COMBOS = {
+  TRH: {given:['T','RH'], blank:['x','h']},
+  Tx:  {given:['T','x'],  blank:['RH','h']},
+  Th:  {given:['T','h'],  blank:['RH','x']},
+  RHx: {given:['RH','x'], blank:['T','h']},
+  hx:  {given:['h','x'],  blank:['T','RH']},
+  RHh: {given:['RH','h'], blank:['T','x']}
+};
+const COMBO_KEYS = Object.keys(COMBOS);
+const COL_ORDER = ['T','RH','x','h'];
+const UNITS = {T:'\u00B0C', RH:'%', x:'g/kg', h:'kJ/kg'};
+const TOL = {T:1.5, RH:5, x:1.0, h:3};
+
+let rows=[];
+
+function formatVal(key, val){
+  if(key==='T' || key==='x') return fmt(val,1);
+  return fmt(val,0);
+}
+
+function randomRow(){
+  let T,RH,xg,tries=0;
+  do{
+    T = Math.round((Math.random()*40-5)*2)/2; // -5 .. 35, stap 0,5
+    RH = Math.round((20 + Math.random()*70)/5)*5; // 20 .. 90, stap 5
+    xg = xFromT_RH(T,RH);
+    tries++;
+  } while((xg>28 || xg<1) && tries<80);
+  const xRounded = Math.round(xg*10)/10;
+  const h = enthalpy(T, xRounded);
+  const combo = COMBO_KEYS[Math.floor(Math.random()*COMBO_KEYS.length)];
+  return { T, RH, x: xRounded, h: Math.round(h), combo };
+}
+
+function newSet(){
+  const n = parseInt(document.getElementById('num-rows').value, 10);
+  rows = Array.from({length:n}, randomRow);
+  renderTable();
+  document.getElementById('summary').textContent='';
+  answersShown=false;
+  document.getElementById('btn-answers').textContent='Toon oplossingen';
+}
+
+function renderTable(){
+  let html = '<table class="worksheet"><thead><tr><th>#</th>';
+  COL_ORDER.forEach(key=>{ html += `<th>${key} [${UNITS[key]}]</th>`; });
+  html += '</tr></thead><tbody>';
+  rows.forEach((row,i)=>{
+    const def = COMBOS[row.combo];
+    html += `<tr><td class="rownum">${i+1}</td>`;
+    COL_ORDER.forEach(key=>{
+      if(def.given.includes(key)){
+        html += `<td class="given">${formatVal(key,row[key])}</td>`;
+      } else {
+        html += `<td class="blank">
+          <input type="text" inputmode="decimal" class="ans" data-row="${i}" data-key="${key}" placeholder="?">
+          <span class="answer-reveal" data-row="${i}" data-key="${key}"></span>
+        </td>`;
+      }
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  document.getElementById('table-wrap').innerHTML = html;
+}
+
+function checkAnswers(){
+  let filled=0, correct=0;
+  document.querySelectorAll('input.ans').forEach(inp=>{
+    const r = parseInt(inp.dataset.row,10), key = inp.dataset.key;
+    inp.classList.remove('input-ok','input-bad');
+    const val = parseNum(inp.value);
+    if(Number.isNaN(val)) return;
+    filled++;
+    const correctVal = rows[r][key];
+    if(Math.abs(val-correctVal) <= TOL[key]){ inp.classList.add('input-ok'); correct++; }
+    else inp.classList.add('input-bad');
+  });
+  document.getElementById('summary').textContent = filled
+    ? `${correct} van ${filled} ingevulde antwoorden correct (tolerantie: T ±1,5°C, RH ±5%, x ±1,0 g/kg, h ±3 kJ/kg).`
+    : 'Vul eerst een paar antwoorden in, of gebruik de afgedrukte versie op papier.';
+}
+
+let answersShown=false;
+function toggleAnswers(){
+  answersShown = !answersShown;
+  document.querySelectorAll('.answer-reveal').forEach(span=>{
+    const r = parseInt(span.dataset.row,10), key = span.dataset.key;
+    span.textContent = answersShown ? ('\u2192 ' + formatVal(key, rows[r][key]) + ' ' + UNITS[key]) : '';
+  });
+  document.getElementById('btn-answers').textContent = answersShown ? 'Verberg oplossingen' : 'Toon oplossingen';
+}
+
+document.getElementById('num-rows').addEventListener('change', newSet);
+newSet();
+</script>
+</body>
+</html>
